@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeVault — DSA Journey Tracker</title>
+    <meta name="description" content="Track your DSA problem-solving journey across LeetCode, HackerRank, CodeForces and more. Visualize your progress beautifully.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Particle Canvas Background -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Floating Orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <div class="logo-icon">
+                <svg viewBox="0 0 40 40" fill="none">
+                    <path d="M20 4L36 12V28L20 36L4 28V12L20 4Z" stroke="url(#logoGrad)" stroke-width="2" fill="none"/>
+                    <path d="M20 10L30 16V26L20 32L10 26V16L20 10Z" fill="url(#logoGrad)" opacity="0.3"/>
+                    <path d="M14 18L18 22L26 14" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
+                            <stop offset="0%" stop-color="#6366f1"/>
+                            <stop offset="100%" stop-color="#a855f7"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-text">Code<span class="brand-highlight">Vault</span></span>
+        </div>
+        <div class="nav-links">
+            <a href="#dashboard" class="nav-link active" data-section="dashboard">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                Dashboard
+            </a>
+            <a href="#problems" class="nav-link" data-section="problems">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Problems
+            </a>
+            <a href="#add" class="nav-link" data-section="add">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                Add Problem
+            </a>
+            <a href="#stats" class="nav-link" data-section="stats">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Analytics
+            </a>
+        </div>
+        <div class="nav-actions">
+            <button class="btn-icon" id="searchToggle" title="Search">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <button class="btn-icon" id="themeToggle" title="Toggle Theme">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Search Overlay -->
+    <div class="search-overlay" id="searchOverlay">
+        <div class="search-modal">
+            <div class="search-input-wrap">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="searchInput" placeholder="Search problems, topics, platforms..." autocomplete="off">
+                <kbd>ESC</kbd>
+            </div>
+            <div class="search-results" id="searchResults"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- ==================== DASHBOARD SECTION ==================== -->
+        <section class="section active" id="dashboard">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">
+                        <span class="greeting" id="greeting">Good Morning</span> 👋
+                    </h1>
+                    <p class="section-subtitle">Here's your DSA journey at a glance</p>
+                </div>
+                <div class="streak-badge" id="streakBadge">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    <span id="streakCount">0</span> day streak
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card stat-total">
+                    <div class="stat-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="totalSolved">0</span>
+                        <span class="stat-label">Total Solved</span>
+                    </div>
+                    <div class="stat-sparkline" id="sparkTotal"></div>
+                </div>
+                <div class="stat-card stat-easy">
+                    <div class="stat-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="easySolved">0</span>
+                        <span class="stat-label">Easy</span>
+                    </div>
+                    <div class="stat-ring easy-ring"><canvas id="easyRing" width="50" height="50"></canvas></div>
+                </div>
+                <div class="stat-card stat-medium">
+                    <div class="stat-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="mediumSolved">0</span>
+                        <span class="stat-label">Medium</span>
+                    </div>
+                    <div class="stat-ring medium-ring"><canvas id="mediumRing" width="50" height="50"></canvas></div>
+                </div>
+                <div class="stat-card stat-hard">
+                    <div class="stat-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="hardSolved">0</span>
+                        <span class="stat-label">Hard</span>
+                    </div>
+                    <div class="stat-ring hard-ring"><canvas id="hardRing" width="50" height="50"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Heatmap -->
+            <div class="card heatmap-card">
+                <div class="card-header">
+                    <h2 class="card-title">📅 Activity Heatmap</h2>
+                    <select id="heatmapYear" class="select-mini"></select>
+                </div>
+                <div class="heatmap-container" id="heatmapContainer">
+                    <div class="heatmap-months" id="heatmapMonths"></div>
+                    <div class="heatmap-grid" id="heatmapGrid"></div>
+                    <div class="heatmap-legend">
+                        <span>Less</span>
+                        <div class="legend-box level-0"></div>
+                        <div class="legend-box level-1"></div>
+                        <div class="legend-box level-2"></div>
+                        <div class="legend-box level-3"></div>
+                        <div class="legend-box level-4"></div>
+                        <span>More</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Problems & Platform Distribution -->
+            <div class="dashboard-grid">
+                <div class="card recent-card">
+                    <div class="card-header">
+                        <h2 class="card-title">🕐 Recent Problems</h2>
+                        <a href="#problems" class="link-btn" onclick="switchSection('problems')">View All →</a>
+                    </div>
+                    <div class="recent-list" id="recentList">
+                        <div class="empty-state-mini">
+                            <p>No problems yet. Start adding!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card platform-card">
+                    <div class="card-header">
+                        <h2 class="card-title">🏆 Platform Breakdown</h2>
+                    </div>
+                    <div class="platform-chart" id="platformChart">
+                        <div class="empty-state-mini">
+                            <p>Add problems to see distribution</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== PROBLEMS SECTION ==================== -->
+        <section class="section" id="problems">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">Problem Vault</h1>
+                    <p class="section-subtitle">All your solved problems in one place</p>
+                </div>
+                <button class="btn btn-primary" onclick="switchSection('add')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add Problem
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <select id="filterPlatform" class="filter-select">
+                        <option value="all">All Platforms</option>
+                        <option value="LeetCode">LeetCode</option>
+                        <option value="HackerRank">HackerRank</option>
+                        <option value="CodeForces">CodeForces</option>
+                        <option value="CodeChef">CodeChef</option>
+                        <option value="GeeksforGeeks">GeeksforGeeks</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <select id="filterDifficulty" class="filter-select">
+                        <option value="all">All Difficulties</option>
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
+                    </select>
+                    <select id="filterTopic" class="filter-select">
+                        <option value="all">All Topics</option>
+                    </select>
+                    <select id="filterSort" class="filter-select">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="name">A-Z</option>
+                        <option value="difficulty">By Difficulty</option>
+                    </select>
+                </div>
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid" id="viewGrid">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    </button>
+                    <button class="view-btn" data-view="list" id="viewList">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Problems Grid -->
+            <div class="problems-grid" id="problemsGrid">
+                <div class="empty-state" id="emptyProblems">
+                    <div class="empty-illustration">
+                        <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+                            <circle cx="60" cy="60" r="50" stroke="url(#emptyGrad)" stroke-width="2" stroke-dasharray="8 4" opacity="0.5"/>
+                            <path d="M45 55L55 65L75 45" stroke="url(#emptyGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+                            <defs><linearGradient id="emptyGrad" x1="0" y1="0" x2="120" y2="120"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs>
+                        </svg>
+                    </div>
+                    <h3>No problems yet</h3>
+                    <p>Start your DSA journey by adding your first problem!</p>
+                    <button class="btn btn-primary" onclick="switchSection('add')">Add Your First Problem</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== ADD PROBLEM SECTION ==================== -->
+        <section class="section" id="add">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">Add New Problem</h1>
+                    <p class="section-subtitle">Document your solution and approach</p>
+                </div>
+            </div>
+
+            <form class="problem-form" id="problemForm">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label">Problem Title *</label>
+                        <input type="text" class="form-input" id="formTitle" placeholder="e.g., Two Sum" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Platform *</label>
+                        <select class="form-input" id="formPlatform" required>
+                            <option value="">Select Platform</option>
+                            <option value="LeetCode">LeetCode</option>
+                            <option value="HackerRank">HackerRank</option>
+                            <option value="CodeForces">CodeForces</option>
+                            <option value="CodeChef">CodeChef</option>
+                            <option value="GeeksforGeeks">GeeksforGeeks</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Difficulty *</label>
+                        <div class="difficulty-pills">
+                            <input type="radio" name="difficulty" value="Easy" id="diffEasy" required>
+                            <label for="diffEasy" class="pill pill-easy">Easy</label>
+                            <input type="radio" name="difficulty" value="Medium" id="diffMedium">
+                            <label for="diffMedium" class="pill pill-medium">Medium</label>
+                            <input type="radio" name="difficulty" value="Hard" id="diffHard">
+                            <label for="diffHard" class="pill pill-hard">Hard</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Topic / Category *</label>
+                        <input type="text" class="form-input" id="formTopic" placeholder="e.g., Arrays, Dynamic Programming" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Problem URL</label>
+                        <input type="url" class="form-input" id="formUrl" placeholder="https://leetcode.com/problems/...">
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Problem Statement *</label>
+                        <textarea class="form-textarea" id="formQuestion" rows="5" placeholder="Paste or write the problem statement here..." required></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Your Approach *</label>
+                        <textarea class="form-textarea" id="formApproach" rows="5" placeholder="Describe your thought process, intuition, and approach..." required></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Solution Code *</label>
+                        <select class="form-input form-lang-select" id="formLanguage">
+                            <option value="python">Python</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="java">Java</option>
+                            <option value="cpp">C++</option>
+                            <option value="c">C</option>
+                            <option value="go">Go</option>
+                            <option value="rust">Rust</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <textarea class="form-textarea code-textarea" id="formSolution" rows="10" placeholder="Paste your solution code here..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Time Complexity</label>
+                        <input type="text" class="form-input" id="formTimeComplexity" placeholder="e.g., O(n)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Space Complexity</label>
+                        <input type="text" class="form-input" id="formSpaceComplexity" placeholder="e.g., O(1)">
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Notes (optional)</label>
+                        <textarea class="form-textarea" id="formNotes" rows="3" placeholder="Any additional notes, edge cases, or learnings..."></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-ghost" onclick="resetForm()">Clear Form</button>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        Save Problem
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- ==================== ANALYTICS SECTION ==================== -->
+        <section class="section" id="stats">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">Analytics</h1>
+                    <p class="section-subtitle">Deep dive into your progress</p>
+                </div>
+            </div>
+
+            <div class="analytics-grid">
+                <div class="card analytics-card">
+                    <h3 class="card-title">📊 Difficulty Distribution</h3>
+                    <canvas id="difficultyChart" width="400" height="300"></canvas>
+                </div>
+                <div class="card analytics-card">
+                    <h3 class="card-title">📈 Topic Mastery</h3>
+                    <div class="topic-bars" id="topicBars">
+                        <div class="empty-state-mini"><p>Add problems to see topic mastery</p></div>
+                    </div>
+                </div>
+                <div class="card analytics-card">
+                    <h3 class="card-title">🗓️ Monthly Progress</h3>
+                    <canvas id="monthlyChart" width="400" height="300"></canvas>
+                </div>
+                <div class="card analytics-card">
+                    <h3 class="card-title">⚡ Performance Stats</h3>
+                    <div class="perf-stats" id="perfStats">
+                        <div class="perf-item">
+                            <span class="perf-value" id="avgPerDay">0</span>
+                            <span class="perf-label">Avg/Day</span>
+                        </div>
+                        <div class="perf-item">
+                            <span class="perf-value" id="bestDay">0</span>
+                            <span class="perf-label">Best Day</span>
+                        </div>
+                        <div class="perf-item">
+                            <span class="perf-value" id="totalTopics">0</span>
+                            <span class="perf-label">Topics Covered</span>
+                        </div>
+                        <div class="perf-item">
+                            <span class="perf-value" id="totalPlatforms">0</span>
+                            <span class="perf-label">Platforms</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Problem Detail Modal -->
+    <div class="modal-overlay" id="problemModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
