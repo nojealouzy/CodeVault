@@ -1,7 +1,8 @@
 // ===== DATA LAYER =====
 // Base problems loaded from problems.json (visible to all visitors)
-// localStorage additions are layered on top (only visible to the local user)
+// localStorage additions/edits/deletions are layered on top
 const DB_KEY = 'codevault_problems';
+const DELETED_KEY = 'codevault_deleted';
 let baseProblems = []; // Loaded from problems.json
 
 // Load base problems from the static JSON file
@@ -18,24 +19,66 @@ async function loadBaseProblems() {
   refreshDashboard();
 }
 
-// Get all problems: base (from JSON) + local additions (from localStorage)
+// Get all problems: base (from JSON) + local additions/edits - local deletions
 function getProblems() {
   const localProblems = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-  // Merge: base problems + local problems, deduplicate by id
-  const allProblems = [...baseProblems];
-  const baseIds = new Set(baseProblems.map(p => p.id));
-  localProblems.forEach(p => {
-    if (!baseIds.has(p.id)) {
+  const deletedIds = new Set(JSON.parse(localStorage.getItem(DELETED_KEY) || '[]'));
+  
+  const localMap = new Map();
+  localProblems.forEach(p => localMap.set(p.id, p));
+
+  const allProblems = [];
+
+  // 1. Add base problems (if not deleted, applying local edits if any)
+  baseProblems.forEach(p => {
+    if (!deletedIds.has(p.id)) {
+      if (localMap.has(p.id)) {
+        allProblems.push(localMap.get(p.id)); // Use the edited local version
+        localMap.delete(p.id);
+      } else {
+        allProblems.push(p);
+      }
+    }
+  });
+
+  // 2. Add remaining local problems (newly added problems)
+  localMap.forEach(p => {
+    if (!deletedIds.has(p.id)) {
       allProblems.push(p);
     }
   });
+
   // Sort by date descending
   allProblems.sort((a, b) => new Date(b.date) - new Date(a.date));
   return allProblems;
 }
 
-// Save only local additions to localStorage
-const saveProblems = (p) => localStorage.setItem(DB_KEY, JSON.stringify(p));
+// Save only local additions/edits/deletions to localStorage
+function saveProblems(problems) {
+  const baseMap = new Map(baseProblems.map(p => [p.id, p]));
+  const localToSave = [];
+  const currentIds = new Set();
+  
+  // Find additions and edits
+  problems.forEach(p => {
+      currentIds.add(p.id);
+      const baseVersion = baseMap.get(p.id);
+      if (!baseVersion || JSON.stringify(p) !== JSON.stringify(baseVersion)) {
+          localToSave.push(p);
+      }
+  });
+  
+  // Find deletions from base
+  const deletedIds = [];
+  baseProblems.forEach(p => {
+      if (!currentIds.has(p.id)) {
+          deletedIds.push(p.id);
+      }
+  });
+  
+  localStorage.setItem(DB_KEY, JSON.stringify(localToSave));
+  localStorage.setItem(DELETED_KEY, JSON.stringify(deletedIds));
+}
 
 // Export all problems as JSON (for updating problems.json)
 function exportProblems() {
