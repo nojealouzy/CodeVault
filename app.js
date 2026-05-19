@@ -7,7 +7,7 @@ let baseProblems = []; // Loaded from problems.json
 // Load base problems from the static JSON file
 async function loadBaseProblems() {
   try {
-    const resp = await fetch('problems.json');
+    const resp = await fetch('problems.json?t=' + new Date().getTime(), { cache: 'no-store' });
     if (resp.ok) {
       baseProblems = await resp.json();
     }
